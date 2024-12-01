@@ -48,10 +48,10 @@ fn part_2() -> io::Result<()> {
     fn populate_map(
         mut map: HashMap<LocationId, (LeftAmount, RightAmount)>,
         column: Column,
-        update_fn: &dyn Fn(&mut (LeftAmount, RightAmount)),
+        update_fn: &impl Fn(&mut (LeftAmount, RightAmount)),
     ) -> HashMap<LocationId, (LeftAmount, RightAmount)> {
         for id in column {
-            map.entry(id).or_insert((0, 0)).apply(update_fn);
+            map.entry(id).or_insert((0, 0)).apply(&update_fn);
         }
         map
     }
