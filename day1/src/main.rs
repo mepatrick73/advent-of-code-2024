@@ -46,14 +46,13 @@ type RightAmount = i32;
 type Column = Vec<i32>;
 fn part_2() -> io::Result<()> {
     fn populate_map(
-        mut map: HashMap<LocationId, (LeftAmount, RightAmount)>,
+        map: &mut HashMap<LocationId, (LeftAmount, RightAmount)>,
         column: Column,
         update_fn: &impl Fn(&mut (LeftAmount, RightAmount)),
-    ) -> HashMap<LocationId, (LeftAmount, RightAmount)> {
+    ) {
         for id in column {
             map.entry(id).or_insert((0, 0)).apply(&update_fn);
         }
-        map
     }
 
     trait Apply {
@@ -72,9 +71,9 @@ fn part_2() -> io::Result<()> {
     left_column.sort_unstable();
     right_column.sort_unstable();
 
-    let sim_map = HashMap::new();
-    let sim_map = populate_map(sim_map, left_column, &|(left, _)| *left += 1);
-    let sim_map = populate_map(sim_map, right_column, &|(_, right)| *right += 1);
+    let mut sim_map = HashMap::new();
+    populate_map(&mut sim_map, left_column, &|(left, _)| *left += 1);
+    populate_map(&mut sim_map, right_column, &|(_, right)| *right += 1);
 
     let acc: i32 = sim_map
         .into_iter()
