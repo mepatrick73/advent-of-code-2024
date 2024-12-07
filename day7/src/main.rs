@@ -20,7 +20,7 @@ fn part_2() -> io::Result<()> {
     for line in &parsed_lines {
         let total = line.0;
         let numbers = &line.1;
-        let all_operations = generate_operations(numbers.len(), false);
+        let all_operations = cartesian_product_n(&vec![add, multiply, concat], numbers.len());
 
         for operations in &all_operations {
             let result = numbers
@@ -58,32 +58,29 @@ fn concat(a: i64, b: i64) -> i64 {
     result_str.parse::<i64>().unwrap()
 }
 
-fn generate_operations(n: usize, is_part_1: bool) -> Vec<Vec<fn(i64, i64) -> i64>> {
-    let operations = if is_part_1 {
-        vec![add as fn(i64, i64) -> i64, multiply]
-    } else {
-        vec![add as fn(i64, i64) -> i64, multiply, concat]
-    };
+fn cartesian_product_n<T>(set: &[T], n: usize) -> Vec<Vec<T>>
+where
+    T: Clone,
+{
+    let mut result = Vec::new();
 
-    let mut all_operations = Vec::new();
+    result.push(vec![]);
 
-    let num_operations = operations.len();
-    let total_combinations = num_operations.pow((n - 1) as u32);
+    for _ in 0..n {
+        let mut new_result = Vec::new();
 
-    for combo in 0..total_combinations {
-        let mut current_combo = Vec::new();
-        let mut combo_index = combo;
-
-        for _ in 0..(n - 1) {
-            let operation_index = combo_index % num_operations;
-            current_combo.push(operations[operation_index]);
-            combo_index /= num_operations;
+        for combination in &result {
+            for element in set {
+                let mut new_combination = combination.clone();
+                new_combination.push(element.clone());
+                new_result.push(new_combination);
+            }
         }
 
-        all_operations.push(current_combo);
+        result = new_result;
     }
 
-    all_operations
+    result
 }
 
 fn part_1() -> io::Result<()> {
@@ -106,7 +103,7 @@ fn part_1() -> io::Result<()> {
     for line in &parsed_lines {
         let total = line.0;
         let numbers = &line.1;
-        let all_operations = generate_operations(numbers.len(), true);
+        let all_operations = cartesian_product_n(&vec![add, multiply], numbers.len());
 
         for operations in &all_operations {
             let result = numbers
