@@ -1,4 +1,5 @@
-use std::{collections::HashSet, fs, io, thread, time::Duration};
+use std::collections::HashMap;
+use std::{fs, io};
 
 fn part_2() -> io::Result<()> {
     let content = fs::read_to_string("res/input.txt")?;
@@ -130,9 +131,9 @@ fn main() -> io::Result<()> {
     use std::time::Instant;
 
     let before = Instant::now();
-    part_1();
+    let _ = part_1();
     println!("Elapsed time: {:.2?}", before.elapsed());
-    part_2();
+    let _ = part_2();
     println!("Elapsed time: {:.2?}", before.elapsed());
     Ok(())
 }
