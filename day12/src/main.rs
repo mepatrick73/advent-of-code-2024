@@ -1,16 +1,7 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs, io,
-};
+use std::{collections::HashSet, fs, io};
 
 fn part_2() -> io::Result<()> {
-    //let content = fs::read_to_string("res/input.txt")?;
-    let content = "AAAAAA
-AAABBA
-AAABBA
-ABBAAA
-ABBAAA
-AAAAAA";
+    let content = fs::read_to_string("res/input.txt")?;
     let matrix = content
         .lines()
         .map(|line| line.chars().collect::<Vec<_>>())
@@ -34,11 +25,11 @@ AAAAAA";
         let char = matrix[*row as usize][*col as usize];
         let area = island.len();
         let perimiter = tracing_algorithmn(&matrix, &island);
-        println!("current char is {char} with area {area} and perimiter {perimiter}");
+        //println!("current char is {char} with area {area} and perimiter {perimiter}");
         res += area as i32 * perimiter;
     }
 
-    println!("islands are : {:?}", islands);
+    //println!("islands are : {:?}", islands);
 
     println!("Part 2 result is : {}", res);
     Ok(())
@@ -99,10 +90,6 @@ impl Direction {
         }
     }
 
-    fn backward(&self) -> Self {
-        self.right().right()
-    }
-
     fn step(&self) -> (i32, i32) {
         match self {
             Direction::Up => (-1, 0),
@@ -135,64 +122,40 @@ impl Edge {
         };
     }
 
-    fn expand_start(&mut self, matrix: &Vec<Vec<char>>) -> bool {
+    fn expand_start(&mut self, matrix: &Vec<Vec<char>>, single_edge: &mut HashSet<Edge>) -> bool {
         let possible_edge_pos = t_add(self.start, self.direction.right().step());
         let should_be_invalid = t_add(possible_edge_pos, self.direction.step());
         if is_valid(&possible_edge_pos, matrix, self.char)
             && !is_valid(&should_be_invalid, matrix, self.char)
         {
             self.start = possible_edge_pos;
+            single_edge.insert(Edge::new(
+                possible_edge_pos,
+                possible_edge_pos,
+                self.direction,
+                self.char,
+            ));
             return true;
         }
         return false;
     }
 
-    fn expand_end(&mut self, matrix: &Vec<Vec<char>>) -> bool {
+    fn expand_end(&mut self, matrix: &Vec<Vec<char>>, single_edge: &mut HashSet<Edge>) -> bool {
         let possible_edge_pos = t_add(self.end, self.direction.left().step());
         let should_be_invalid = t_add(possible_edge_pos, self.direction.step());
         if is_valid(&possible_edge_pos, matrix, self.char)
             && !is_valid(&should_be_invalid, matrix, self.char)
         {
+            single_edge.insert(Edge::new(
+                possible_edge_pos,
+                possible_edge_pos,
+                self.direction,
+                self.char,
+            ));
             self.end = possible_edge_pos;
             return true;
         }
         return false;
-    }
-
-    fn new_edge(&self, matrix: &Vec<Vec<char>>) -> Self {
-        // top position is a right turn
-        let top_postion = t_add(
-            t_add(self.end, self.direction.step()),
-            self.direction.left().step(),
-        );
-        if is_valid(&top_postion, matrix, self.char) {
-            let new_direction = self.direction.right();
-            return Edge::new(
-                top_postion.clone(),
-                top_postion,
-                self.direction.right(),
-                self.char,
-            );
-        } else {
-            // do a left turn
-            return Edge::new(self.end, self.end, self.direction.left(), self.char);
-        }
-    }
-
-    fn contains(&self, edge: &Edge) -> bool {
-        match self.direction {
-            Direction::Up => {
-                if edge.direction != Direction::Up {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            Direction::Left => i,
-
-            Direction::Down => i,
-            Direction::Right => i,
-        }
     }
 }
 
@@ -228,46 +191,29 @@ fn generate_all_edges(island: &Vec<(i32, i32)>, matrix: &Vec<Vec<char>>, char: c
 // mark single edges as done. Once you've done all the edges, count the number of edges in the set
 fn tracing_algorithmn(matrix: &Vec<Vec<char>>, island: &Vec<(i32, i32)>) -> i32 {
     let mut edges: HashSet<Edge> = HashSet::new();
-    let start = *island.first().unwrap();
     let (row, col) = *island.first().unwrap();
     let char = matrix[row as usize][col as usize];
-    let mut curr_edge = Edge::new(start, start, Direction::Up, char);
-    //setup start of edge
-    loop {
-        if !curr_edge.expand_start(&matrix) {
-            //   println!("{curr_edge:?}");
-            break;
+    let mut single_set: HashSet<Edge> = HashSet::new();
+    let mut all_edges = generate_all_edges(island, matrix, char);
+    for edge in all_edges.iter_mut() {
+        if single_set.contains(&edge) {
+            continue;
         }
-    }
-    //setup end of edge
-    loop {
-        //println!("should only be called once");
-        if !curr_edge.expand_end(&matrix) {
-            //    println!("yup");
-            //    println!("{curr_edge:?}");
-            break;
-        }
-    }
+        single_set.insert(edge.clone());
 
-    loop {
-        edges.insert(curr_edge.clone());
-        println!("should only be called once");
-        curr_edge = curr_edge.new_edge(&matrix);
         loop {
-            if !curr_edge.expand_end(&matrix) {
-                //        println!("yup");
-                //        println!("{curr_edge:?}");
+            if !edge.expand_start(&matrix, &mut single_set) {
                 break;
             }
         }
-        //println!("{curr_edge:?}");
-        //panic!("testing");
-        if edges.contains(&curr_edge) {
-            let all_edges = generate_all_edges(island, matrix, char);
-            println!("all edges {all_edges:?}");
-            println!("built edges edges {edges:?}");
-            break;
+
+        loop {
+            if !edge.expand_end(&matrix, &mut single_set) {
+                break;
+            }
         }
+
+        edges.insert(edge.clone());
     }
 
     edges.len() as i32
@@ -360,7 +306,7 @@ fn part_1() -> io::Result<()> {
         res += area as i32 * perimiter;
     }
 
-    println!("islands are : {:?}", islands);
+    //println!("islands are : {:?}", islands);
 
     println!("Part 1 result is : {}", res);
     Ok(())
@@ -370,7 +316,7 @@ fn main() -> io::Result<()> {
     use std::time::Instant;
 
     let before = Instant::now();
-    //part_1()?;
+    part_1()?;
     println!("Elapsed time: {:.2?}", before.elapsed());
     part_2()?;
     println!("Elapsed time: {:.2?}", before.elapsed());
