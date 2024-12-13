@@ -21,15 +21,10 @@ fn part_2() -> io::Result<()> {
     let mut res = 0;
 
     for island in islands.iter() {
-        let (row, col) = island.first().unwrap();
-        let char = matrix[*row as usize][*col as usize];
         let area = island.len();
         let perimiter = tracing_algorithmn(&matrix, &island);
-        //println!("current char is {char} with area {area} and perimiter {perimiter}");
         res += area as i32 * perimiter;
     }
-
-    //println!("islands are : {:?}", islands);
 
     println!("Part 2 result is : {}", res);
     Ok(())
@@ -271,17 +266,6 @@ fn visit(
 
 fn part_1() -> io::Result<()> {
     let content = fs::read_to_string("res/input.txt")?;
-    //    let content = "RRRRIICCFF
-    //RRRRIICCCF
-    //VVRRRCCFFF
-    //VVRCCCJFFF
-    //VVVVCJJCFE
-    //VVIVCCJJEE
-    //VVIIICJJEE
-    //MIIIIIJJEE
-    //MIIISIJEEE
-    //MMMISSJEEE
-    //";
     let matrix = content
         .lines()
         .map(|line| line.chars().collect::<Vec<_>>())
@@ -305,8 +289,6 @@ fn part_1() -> io::Result<()> {
         let perimiter = calculate_perimeter(&island, &matrix);
         res += area as i32 * perimiter;
     }
-
-    //println!("islands are : {:?}", islands);
 
     println!("Part 1 result is : {}", res);
     Ok(())
