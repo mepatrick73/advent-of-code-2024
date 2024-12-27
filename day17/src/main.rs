@@ -75,9 +75,6 @@ impl Emulator {
         //OUT
         else if opcode == 5 {
             let combo_operand = self.combo_operand(self.sp + 1) % 8;
-            //if self.og_program[self.output_tape.len()] != combo_operand {
-            //    return false;
-            //}
             self.output_tape.push(combo_operand);
             self.sp = self.sp + 2;
         }
@@ -130,8 +127,6 @@ Program: 2,4,1,5,7,5,1,6,0,3,4,3,5,5,3,0";
         for i in 0..8 {
             let mut the_a = current_a >> (current_position) * 3;
             the_a += i;
-            a_s.push(i);
-            a_s.pop();
             let mut b = the_a % 8;
             b = b ^ 5;
             let c = the_a >> b;
