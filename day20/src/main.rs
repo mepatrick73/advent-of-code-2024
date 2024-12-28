@@ -3,23 +3,62 @@ use std::{
     fs, io,
 };
 
-fn parse_matrix(content: String) -> ((usize, usize), (usize, usize), Vec<Vec<char>>, usize, usize) {
-    let mut start_coordinate = (0, 0);
-    let mut end_coordinate = (0, 0);
-    let matrix: Vec<Vec<char>> = content.lines().map(|line| line.chars().collect()).collect();
-    let rows = matrix.len();
-    let cols = matrix[0].len();
-    for (r_idx, row) in matrix.iter().enumerate() {
-        for (c_idx, char) in row.iter().enumerate() {
-            if *char == 'S' {
-                start_coordinate = (r_idx, c_idx);
-            }
-            if *char == 'E' {
-                end_coordinate = (r_idx, c_idx);
+fn main() -> io::Result<()> {
+    use std::time::Instant;
+
+    let before = Instant::now();
+    part_1()?;
+    part_2()?;
+    println!("Elapsed time: {:.2?}", before.elapsed());
+    Ok(())
+}
+
+fn part_2() -> io::Result<()> {
+    let content = fs::read_to_string("res/input.txt")?;
+    let (start_coordinate, end_coordinate, matrix, rows, cols) = parse_matrix(content);
+    let res = cheat_distance(start_coordinate, end_coordinate, rows, cols, matrix, 20);
+    println!("Day 20 part 2 result is : {res}");
+    Ok(())
+}
+
+fn part_1() -> io::Result<()> {
+    let content = fs::read_to_string("res/input.txt")?;
+    let (start_coordinate, end_coordinate, matrix, rows, cols) = parse_matrix(content);
+    let res = cheat_distance(start_coordinate, end_coordinate, rows, cols, matrix, 2);
+    println!("Day 20 part 1 result is : {res}");
+    Ok(())
+}
+
+fn cheat_distance(
+    start_coordinate: (usize, usize),
+    end_coordinate: (usize, usize),
+    rows: usize,
+    cols: usize,
+    matrix: Vec<Vec<char>>,
+    cheat_length: i32,
+) -> usize {
+    let shortest_path = bfs_shortest_path(start_coordinate, end_coordinate, &matrix, rows, cols);
+    let normal_time = shortest_path.len() - 1;
+    let mut freq: HashMap<usize, usize> = HashMap::new();
+    for i in 0..shortest_path.len() {
+        let node_1 = shortest_path[i];
+        for j in i + 1..shortest_path.len() {
+            let node_2 = shortest_path[j];
+            let man_distance = (node_1.0 as i32 - node_2.0 as i32).abs() as i32
+                + (node_1.1 as i32 - node_2.1 as i32).abs() as i32;
+            if man_distance <= cheat_length {
+                let total_distance = i + man_distance as usize + shortest_path.len() - j - 1;
+                if total_distance < normal_time && normal_time - total_distance >= 100 {
+                    freq.entry(normal_time - total_distance)
+                        .and_modify(|e| *e += 1)
+                        .or_insert(1);
+                }
             }
         }
     }
-    (start_coordinate, end_coordinate, matrix, rows, cols)
+    let res = freq.into_iter().fold(0, |acc, (_key, value)| acc + value);
+
+    res
 }
 
 fn bfs_shortest_path(
@@ -65,60 +104,21 @@ fn bfs_shortest_path(
     return shortest_path;
 }
 
-fn cheat_distance(
-    start_coordinate: (usize, usize),
-    end_coordinate: (usize, usize),
-    rows: usize,
-    cols: usize,
-    matrix: Vec<Vec<char>>,
-    cheat_length: i32,
-) -> usize {
-    let shortest_path = bfs_shortest_path(start_coordinate, end_coordinate, &matrix, rows, cols);
-    let normal_time = shortest_path.len() - 1;
-    let mut freq: HashMap<usize, usize> = HashMap::new();
-    for i in 0..shortest_path.len() {
-        let node_1 = shortest_path[i];
-        for j in i + 1..shortest_path.len() {
-            let node_2 = shortest_path[j];
-            let man_distance = (node_1.0 as i32 - node_2.0 as i32).abs() as i32
-                + (node_1.1 as i32 - node_2.1 as i32).abs() as i32;
-            if man_distance <= cheat_length {
-                let total_distance = i + man_distance as usize + shortest_path.len() - j - 1;
-                if total_distance < normal_time && normal_time - total_distance >= 100 {
-                    freq.entry(normal_time - total_distance)
-                        .and_modify(|e| *e += 1)
-                        .or_insert(1);
-                }
+fn parse_matrix(content: String) -> ((usize, usize), (usize, usize), Vec<Vec<char>>, usize, usize) {
+    let mut start_coordinate = (0, 0);
+    let mut end_coordinate = (0, 0);
+    let matrix: Vec<Vec<char>> = content.lines().map(|line| line.chars().collect()).collect();
+    let rows = matrix.len();
+    let cols = matrix[0].len();
+    for (r_idx, row) in matrix.iter().enumerate() {
+        for (c_idx, char) in row.iter().enumerate() {
+            if *char == 'S' {
+                start_coordinate = (r_idx, c_idx);
+            }
+            if *char == 'E' {
+                end_coordinate = (r_idx, c_idx);
             }
         }
     }
-    let res = freq.into_iter().fold(0, |acc, (_key, value)| acc + value);
-
-    res
-}
-
-fn part_2() -> io::Result<()> {
-    let content = fs::read_to_string("res/input.txt")?;
-    let (start_coordinate, end_coordinate, matrix, rows, cols) = parse_matrix(content);
-    let res = cheat_distance(start_coordinate, end_coordinate, rows, cols, matrix, 20);
-    println!("Day 20 part 2 result is : {res}");
-    Ok(())
-}
-
-fn part_1() -> io::Result<()> {
-    let content = fs::read_to_string("res/input.txt")?;
-    let (start_coordinate, end_coordinate, matrix, rows, cols) = parse_matrix(content);
-    let res = cheat_distance(start_coordinate, end_coordinate, rows, cols, matrix, 2);
-    println!("Day 20 part 1 result is : {res}");
-    Ok(())
-}
-
-fn main() -> io::Result<()> {
-    use std::time::Instant;
-
-    let before = Instant::now();
-    part_1()?;
-    part_2()?;
-    println!("Elapsed time: {:.2?}", before.elapsed());
-    Ok(())
+    (start_coordinate, end_coordinate, matrix, rows, cols)
 }
